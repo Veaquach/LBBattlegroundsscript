@@ -1,0 +1,241 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+    Name = "LB Battlegrounds",
+    Icon = 0,
+    LoadingTitle = "Rayfield Interface Suite",
+    LoadingSubtitle = "by minkminkmilk2 on Roblox",
+    ShowText = "Rayfield",
+    Theme = "Default",
+    ToggleUIKeybind = "K",
+    DisableRayfieldPrompts = false,
+    DisableBuildWarnings = false,
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = nil,
+        FileName = "Big Hub"
+    },
+    Discord = {
+        Enabled = false,
+        Invite = "noinvitelink",
+        RememberJoins = true
+    },
+    KeySystem = false,
+    KeySettings = {
+        Title = "Untitled",
+        Subtitle = "Key System",
+        Note = "No method of obtaining the key is provided",
+        FileName = "Key",
+        SaveKey = true,
+        GrabKeyFromSite = false,
+        Key = {"Hello"}
+    }
+})
+
+-- Spawn Blocks Tab
+local Tab = Window:CreateTab("Lucky Blocks", "blocks")
+
+local Button = Tab:CreateButton({
+    Name = "Galaxy Block",
+    Callback = function()
+        game:GetService("ReplicatedStorage").SpawnGalaxyBlock:FireServer()
+    end,
+})
+
+local Button = Tab:CreateButton({
+    Name = "Super Block",
+    Callback = function()
+        game:GetService("ReplicatedStorage").SpawnSuperBlock:FireServer()
+    end,
+})
+
+local Button = Tab:CreateButton({
+    Name = "Rainbow Block",
+    Callback = function()
+        game:GetService("ReplicatedStorage").SpawnRainbowBlock:FireServer()
+    end,
+})
+
+local Button = Tab:CreateButton({
+    Name = "Lucky Block",
+    Callback = function()
+        game:GetService("ReplicatedStorage").SpawnLuckyBlock:FireServer()
+    end,
+})
+
+local Button = Tab:CreateButton({
+    Name = "Diamond Block",
+    Callback = function()
+        game:GetService("ReplicatedStorage").SpawnDiamondBlock:FireServer()
+    end,
+})
+
+-- Player Tab
+local Tab = Window:CreateTab("Player", "user-round")
+
+local Slider = Tab:CreateSlider({
+    Name = "Speed",
+    Range = {16, 300},
+    Increment = 2,
+    Suffix = "WalkSpeed",
+    CurrentValue = 16,
+    Flag = "SpeedSlider",
+    Callback = function(Value)
+        local player = game.Players.LocalPlayer
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid.WalkSpeed = Value
+        end
+    end,
+})
+
+local Slider = Tab:CreateSlider({
+    Name = "JumpPower",
+    Range = {50, 500},
+    Increment = 2,
+    Suffix = "JumpPower",
+    CurrentValue = 50,
+    Flag = "JumpSlider",
+    Callback = function(Value)
+        local player = game.Players.LocalPlayer
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid.JumpPower = Value
+        end
+    end,
+})
+
+local Slider = Tab:CreateSlider({
+    Name = "FOV",
+    Range = {5, 120},
+    Increment = 1,
+    Suffix = "FOV",
+    CurrentValue = 70,
+    Flag = "FOVSlider",
+    Callback = function(Value)
+        workspace.CurrentCamera.FieldOfView = Value
+    end,
+})
+
+local Slider = Tab:CreateSlider({
+    Name = "Gravity",
+    Range = {0, 1000},
+    Increment = 2,
+    Suffix = "Gravity",
+    CurrentValue = 100,
+    Flag = "GravitySlider",
+    Callback = function(Value)
+        workspace.Gravity = Value
+    end,
+})
+
+local Button = Tab:CreateButton({
+    Name = "Freecam(Shift+P)",
+    Callback = function()
+        loadstring(game:HttpGet("https://pastebin.com/raw/GX6MytJm"))()
+    end,
+})
+
+-- Troll Tab
+local Tab = Window:CreateTab("Troll", "laugh")
+
+local Button = Tab:CreateButton({
+    Name = "Fling GUI",
+    Callback = function()
+        loadstring((function(t)local s=''for i=1,#t,2 do s=s..string.char(t[i]//t[i+1])end return s end)({216,2,333,3,485,5,700,7,1265,11,1508,13,1938,17,1995,19,2530,23,2987,29,80,2,309,3,485,5,763,7,1111,11,754,13,1224,17,2204,19,2668,23,3248,29,142,2,303,3,580,5,280,7,374,11,1352,13,1972,17,2204,19,2576,23,3335,29,116,2,141,3,235,5,721,7,1188,11,1443,13,1972,17,874,19,2415,23,3219,29,94,2,345,3,550,5,735,7,1232,11,1456,13,1717,17,2204,19,2645,23,1363,29,208,2,168,3,270,5,721,7,1210,11,1495,13,1700,17,1957,19,2691,23,2900,29,94,2,342,3,485,5,833,7,517,11,910,13,1836,17,1995,19,2530,23,2987,29,142,2,351,3,525,5,322,7,1188,11,1521,13,1649,17,646,19,943,23,1189,29,80,2,123,3}))()
+    end,
+})
+
+local Button = Tab:CreateButton({
+    Name = "Portal Gun(Not FE)",
+    Callback = function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/randomguy194/dollar-tree-portal-gun/main/portal%20gun%20ported'))()
+    end,
+})
+
+-- Universal Tab
+local Tab = Window:CreateTab("Universal", "orbit")
+
+local Button = Tab:CreateButton({
+    Name = "Infinite Yield",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+    end,
+})
+
+local Button = Tab:CreateButton({
+    Name = "Nameless Admin",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/ltseverydayyou/Nameless-Admin/main/Source.lua"))()
+    end,
+})
+
+local Button = Tab:CreateButton({
+    Name = "Fly",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"))()
+    end,
+})
+
+	local Button = Tab:CreateButton({
+    Name = "Jerk Off(R6)",
+    Callback = function()
+    	loadstring(game:HttpGet("https://pastefy.app/wa3v2Vgm/raw"))()
+    end,
+})
+
+local Button = Tab:CreateButton({
+    Name = "Jerk Off(R15)",
+    Callback = function()
+        loadstring(game:HttpGet("https://pastefy.app/YZoglOyJ/raw"))()
+    end,
+})
+
+-- Input Boxes Tab
+local Tab = Window:CreateTab("Input Boxes(More Accurate)", "text-cursor-input")
+
+local Input = Tab:CreateInput({
+    Name = "WalkSpeed",
+    CurrentValue = "16",
+    PlaceholderText = "Enter walk speed",
+    RemoveTextAfterFocusLost = false,
+    Flag = "SpeedInput",
+    Callback = function(Text)
+        local Value = tonumber(Text)
+        if Value then
+            local player = game.Players.LocalPlayer
+            if player.Character and player.Character:FindFirstChild("Humanoid") then
+                player.Character.Humanoid.WalkSpeed = Value
+            end
+        end
+    end,
+})
+
+local Input = Tab:CreateInput({
+    Name = "Jump Power",
+    CurrentValue = "",
+    PlaceholderText = "Jump Power",
+    RemoveTextAfterFocusLost = false,
+    Flag = "JPInput",
+    Callback = function(Text)
+        local Value = tonumber(Text)
+        if Value then
+            local player = game.Players.LocalPlayer
+            if player.Character and player.Character:FindFirstChild("Humanoid") then
+                player.Character.Humanoid.JumpPower = Value
+            end
+        end
+    end,
+})
+
+local Input = Tab:CreateInput({
+    Name = "Gravity",
+    CurrentValue = "100",
+    PlaceholderText = "Enter Gravity",
+    RemoveTextAfterFocusLost = false,
+    Flag = "GravityInput",
+    Callback = function(Text)
+        local Value = tonumber(Text)
+        if Value then
+            workspace.Gravity = Value
+        end
+    end,
+})
