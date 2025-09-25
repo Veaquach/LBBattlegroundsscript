@@ -125,19 +125,6 @@ local SliderGravity = TabPlayer:CreateSlider({
     end,
 })
 
-local TPWalkDistance = 0
-local SliderTP = TabPlayer:CreateSlider({
-    Name = "TP Walk",
-    Range = {0, 85},
-    Increment = 1,
-    Suffix = "TPWalk",
-    CurrentValue = TPWalkDistance,
-    Flag = "TPWalkSlider",
-    Callback = function(Value)
-        TPWalkDistance = Value
-    end,
-})
-
 local ButtonReset = TabPlayer:CreateButton({
     Name = "Default Values (Doesn't update visually)",
     Callback = function()
@@ -340,6 +327,8 @@ local InputGameID = TabPlayer:CreateInput({
     end,
 })
 
+local TabPlayer = Window:CreateTab("Game Related", "gamepad-2")
+
 local ButtonServerHop = TabPlayer:CreateButton({
     Name = "Server Hop",
     Callback = function()
@@ -398,6 +387,26 @@ local ButtonServerHop = TabPlayer:CreateButton({
             end
         end
         TPReturner()
+    end,
+})
+
+local ButtonKick = TabPlayer:CreateButton({
+    Name = "Kick Yourself",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        if player.Character then
+            player:Kick("Whoops! you kicked yourself, was that a misclick?? Haha!")
+        end
+    end,
+})
+
+local ButtonSoftKick = TabPlayer:CreateButton({
+    Name = "Reset My Character",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        if player.Character then
+            player.Character:BreakJoints()
+        end
     end,
 })
 
