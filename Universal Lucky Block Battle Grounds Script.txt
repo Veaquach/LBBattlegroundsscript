@@ -259,6 +259,8 @@ local Input = Tab:CreateInput({
     end,
 })
 
+local TabPlayer = Window:CreateTab("Game Related", "gamepad-2")
+
 local InputGameID = TabPlayer:CreateInput({
     Name = "Server Hop Game ID",
     CurrentValue = tostring(game.PlaceId),
@@ -326,8 +328,6 @@ local InputGameID = TabPlayer:CreateInput({
         end)
     end,
 })
-
-local TabPlayer = Window:CreateTab("Game Related", "gamepad-2")
 
 local ButtonServerHop = TabPlayer:CreateButton({
     Name = "Server Hop",
