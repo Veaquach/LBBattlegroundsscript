@@ -32,6 +32,86 @@ local Window = Rayfield:CreateWindow({
     }
 })
 
+spawn(function()
+    wait(1800) -- wait 30 minutes
+    Rayfield:Notify({
+        Title = "Time Check",
+        Content = "Do you want to leave? You have been playing for 30 minutes in this instance.",
+        Duration = 5,
+        Image = 4483345998, -- example icon
+        Actions = {
+            Ignore = {
+                Name = "Stay",
+                Callback = function() end
+            },
+            Callback = {
+                Name = "Server Hop",
+                Callback = function()
+                    local TeleportService = game:GetService("TeleportService")
+                    local HttpService = game:GetService("HttpService")
+                    local PlaceID = game.PlaceId
+                    local AllIDs = {}
+                    local foundAnything = ""
+                    local actualHour = os.date("!*t").hour
+
+                    local File = pcall(function()
+                        AllIDs = HttpService:JSONDecode(readfile("NotSameServers.json"))
+                    end)
+                    if not File then
+                        table.insert(AllIDs, actualHour)
+                        writefile("NotSameServers.json", HttpService:JSONEncode(AllIDs))
+                    end
+
+                    local function TPReturner()
+                        local Site
+                        if foundAnything == "" then
+                            Site = HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100'))
+                        else
+                            Site = HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100&cursor=' .. foundAnything))
+                        end
+
+                        if Site.nextPageCursor and Site.nextPageCursor ~= "null" then
+                            foundAnything = Site.nextPageCursor
+                        end
+
+                        for i,v in pairs(Site.data) do
+                            local ID = tostring(v.id)
+                            local Possible = true
+                            if tonumber(v.maxPlayers) > tonumber(v.playing) then
+                                for _,Existing in pairs(AllIDs) do
+                                    if ID == tostring(Existing) then
+                                        Possible = false
+                                        break
+                                    end
+                                end
+
+                                if Possible then
+                                    table.insert(AllIDs, ID)
+                                    pcall(function()
+                                        writefile("NotSameServers.json", HttpService:JSONEncode(AllIDs))
+										
+                                        if syn and syn.queue_on_teleport then
+                                            syn.queue_on_teleport('loadstring(game:HttpGet("https://raw.githubusercontent.com/Veaquach/LBBattlegroundsscript/refs/heads/main/Universal%20Lucky%20Block%20Battle%20Grounds%20Script.txt"))()')
+                                        elseif queue_on_teleport then
+                                            queue_on_teleport('loadstring(game:HttpGet("https://raw.githubusercontent.com/Veaquach/LBBattlegroundsscript/refs/heads/main/Universal%20Lucky%20Block%20Battle%20Grounds%20Script.txt"))()')
+                                        end
+
+                                        TeleportService:TeleportToPlaceInstance(PlaceID, ID, game.Players.LocalPlayer)
+                                    end)
+                                    wait(4)
+                                    return
+                                end
+                            end
+                        end
+                    end
+
+                    TPReturner()
+                end
+            }
+        }
+    })
+end)
+
 local Tab = Window:CreateTab("Lucky Blocks", "blocks")
 
 local Button = Tab:CreateButton({
@@ -407,6 +487,38 @@ local ButtonSoftKick = TabPlayer:CreateButton({
         if player.Character then
             player.Character:BreakJoints()
         end
+    end,
+})
+
+local InputInstanceID = TabPlayer:CreateInput({
+    Name = "Join Instance ID",
+    CurrentValue = "",
+    PlaceholderText = "Enter Instance ID",
+    RemoveTextAfterFocusLost = false,
+    Flag = "JoinInstanceInput",
+    Callback = function(Text)
+
+    end,
+})
+
+local ButtonJoinInstance = TabPlayer:CreateButton({
+    Name = "Join Instance",
+    Callback = function()
+        local InstanceID = InputInstanceID.CurrentValue
+        local PlaceID = game.PlaceId
+        if not InstanceID or InstanceID == "" then
+    Rayfield:Notify({
+        Title = "Invalid Instance ID",
+        Content = "No Instance ID Provided, to get one for this server, use Nameless Admin's jobid command to save this server's instance id, or ask your friend to do the same on his server.",
+        Duration = 8,
+        Image = "circle-slash-2",
+        Actions = {}
+    })
+    return
+end
+
+        local TeleportService = game:GetService("TeleportService")
+        TeleportService:TeleportToPlaceInstance(PlaceID, InstanceID, game.Players.LocalPlayer)
     end,
 })
 
