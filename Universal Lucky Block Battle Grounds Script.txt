@@ -32,7 +32,6 @@ local Window = Rayfield:CreateWindow({
     }
 })
 
--- Spawn Blocks Tab
 local Tab = Window:CreateTab("Lucky Blocks", "blocks")
 
 local Button = Tab:CreateButton({
@@ -70,10 +69,9 @@ local Button = Tab:CreateButton({
     end,
 })
 
--- Player Tab
-local Tab = Window:CreateTab("Player", "user-round")
+local TabPlayer = Window:CreateTab("Player", "user-round")
 
-local Slider = Tab:CreateSlider({
+local SliderSpeed = TabPlayer:CreateSlider({
     Name = "Speed",
     Range = {16, 300},
     Increment = 2,
@@ -88,7 +86,7 @@ local Slider = Tab:CreateSlider({
     end,
 })
 
-local Slider = Tab:CreateSlider({
+local SliderJump = TabPlayer:CreateSlider({
     Name = "JumpPower",
     Range = {50, 500},
     Increment = 2,
@@ -103,7 +101,7 @@ local Slider = Tab:CreateSlider({
     end,
 })
 
-local Slider = Tab:CreateSlider({
+local SliderFOV = TabPlayer:CreateSlider({
     Name = "FOV",
     Range = {5, 120},
     Increment = 1,
@@ -115,7 +113,7 @@ local Slider = Tab:CreateSlider({
     end,
 })
 
-local Slider = Tab:CreateSlider({
+local SliderGravity = TabPlayer:CreateSlider({
     Name = "Gravity",
     Range = {0, 1000},
     Increment = 2,
@@ -127,14 +125,50 @@ local Slider = Tab:CreateSlider({
     end,
 })
 
-local Button = Tab:CreateButton({
-    Name = "Freecam(Shift+P)",
-    Callback = function()
-        loadstring(game:HttpGet("https://pastebin.com/raw/GX6MytJm"))()
+local TPWalkDistance = 0
+local SliderTP = TabPlayer:CreateSlider({
+    Name = "TP Walk",
+    Range = {0, 85},
+    Increment = 1,
+    Suffix = "TPWalk",
+    CurrentValue = TPWalkDistance,
+    Flag = "TPWalkSlider",
+    Callback = function(Value)
+        TPWalkDistance = Value
     end,
 })
 
--- Troll Tab
+local ButtonReset = TabPlayer:CreateButton({
+    Name = "Default Values (Doesn't update visually)",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid.WalkSpeed = 16
+            player.Character.Humanoid.JumpPower = 50
+        end
+
+        workspace.CurrentCamera.FieldOfView = 70
+        workspace.Gravity = 196
+
+        local sliders = {
+            {SliderSpeed, 16},
+            {SliderJump, 50},
+            {SliderFOV, 70},
+            {SliderGravity, 196},
+            {SliderTP, 0},
+        }
+
+        for _, data in pairs(sliders) do
+            local sliderObj, defaultValue = unpack(data)
+            sliderObj.CurrentValue = defaultValue
+            if sliderObj.Callback then
+                sliderObj.Callback(defaultValue)
+            end
+        end
+    end,
+})
+
 local Tab = Window:CreateTab("Troll", "laugh")
 
 local Button = Tab:CreateButton({
@@ -151,7 +185,6 @@ local Button = Tab:CreateButton({
     end,
 })
 
--- Universal Tab
 local Tab = Window:CreateTab("Universal", "orbit")
 
 local Button = Tab:CreateButton({
@@ -175,10 +208,10 @@ local Button = Tab:CreateButton({
     end,
 })
 
-	local Button = Tab:CreateButton({
+local Button = Tab:CreateButton({
     Name = "Jerk Off(R6)",
     Callback = function()
-    	loadstring(game:HttpGet("https://pastefy.app/wa3v2Vgm/raw"))()
+        loadstring(game:HttpGet("https://pastefy.app/wa3v2Vgm/raw"))()
     end,
 })
 
@@ -189,7 +222,6 @@ local Button = Tab:CreateButton({
     end,
 })
 
--- Input Boxes Tab
 local Tab = Window:CreateTab("Input Boxes(More Accurate)", "text-cursor-input")
 
 local Input = Tab:CreateInput({
@@ -238,4 +270,177 @@ local Input = Tab:CreateInput({
             workspace.Gravity = Value
         end
     end,
+})
+
+local InputGameID = TabPlayer:CreateInput({
+    Name = "Server Hop Game ID",
+    CurrentValue = tostring(game.PlaceId),
+    PlaceholderText = "Enter Game/Place ID",
+    RemoveTextAfterFocusLost = false,
+    Flag = "ServerHopInput",
+    Callback = function(Text)
+        local PlaceID = tonumber(Text)
+        if not PlaceID then
+            warn("Invalid Game ID")
+            return
+        end
+        local HttpService = game:GetService("HttpService")
+        local TeleportService = game:GetService("TeleportService")
+        local AllIDs = {}
+        local foundAnything = ""
+        local actualHour = os.date("!*t").hour
+        local File = pcall(function()
+            AllIDs = HttpService:JSONDecode(readfile("NotSameServers.json"))
+        end)
+        if not File then
+            table.insert(AllIDs, actualHour)
+            writefile("NotSameServers.json", HttpService:JSONEncode(AllIDs))
+        end
+        local function TPReturner()
+            local Site
+            if foundAnything == "" then
+                Site = HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100'))
+            else
+                Site = HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100&cursor=' .. foundAnything))
+            end
+            if Site.nextPageCursor and Site.nextPageCursor ~= "null" then
+                foundAnything = Site.nextPageCursor
+            end
+            for i,v in pairs(Site.data) do
+                local ID = tostring(v.id)
+                local Possible = true
+                if tonumber(v.maxPlayers) > tonumber(v.playing) then
+                    for _, Existing in pairs(AllIDs) do
+                        if ID == tostring(Existing) then
+                            Possible = false
+                            break
+                        end
+                    end
+                    if Possible then
+                        table.insert(AllIDs, ID)
+                        pcall(function()
+                            writefile("NotSameServers.json", HttpService:JSONEncode(AllIDs))
+                            TeleportService:TeleportToPlaceInstance(PlaceID, ID, game.Players.LocalPlayer)
+                        end)
+                        wait(4)
+                        return
+                    end
+                end
+            end
+        end
+        spawn(function()
+            while true do
+                pcall(TPReturner)
+                if foundAnything ~= "" then
+                    pcall(TPReturner)
+                end
+                wait(2)
+            end
+        end)
+    end,
+})
+
+local ButtonServerHop = TabPlayer:CreateButton({
+    Name = "Server Hop",
+    Callback = function()
+        local ServerHopGameID = tonumber(InputGameID.CurrentValue)
+        if not ServerHopGameID then
+            warn("Invalid Game ID")
+            return
+        end
+        local HttpService = game:GetService("HttpService")
+        local TeleportService = game:GetService("TeleportService")
+        local AllIDs = {}
+        local foundAnything = ""
+        local actualHour = os.date("!*t").hour
+        local File = pcall(function()
+            AllIDs = HttpService:JSONDecode(readfile("NotSameServers.json"))
+        end)
+        if not File then
+            table.insert(AllIDs, actualHour)
+            writefile("NotSameServers.json", HttpService:JSONEncode(AllIDs))
+        end
+        local function TPReturner()
+            local Site
+            if foundAnything == "" then
+                Site = HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. ServerHopGameID .. '/servers/Public?sortOrder=Asc&limit=100'))
+            else
+                Site = HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. ServerHopGameID .. '/servers/Public?sortOrder=Asc&limit=100&cursor=' .. foundAnything))
+            end
+            if Site.nextPageCursor and Site.nextPageCursor ~= "null" then
+                foundAnything = Site.nextPageCursor
+            end
+            for i,v in pairs(Site.data) do
+                local ID = tostring(v.id)
+                local Possible = true
+                if tonumber(v.maxPlayers) > tonumber(v.playing) then
+                    for _, Existing in pairs(AllIDs) do
+                        if ID == tostring(Existing) then
+                            Possible = false
+                            break
+                        end
+                    end
+                    if Possible then
+                        table.insert(AllIDs, ID)
+                        pcall(function()
+                            writefile("NotSameServers.json", HttpService:JSONEncode(AllIDs))
+                            if syn and syn.queue_on_teleport then
+                                syn.queue_on_teleport('loadstring(game:HttpGet("https://raw.githubusercontent.com/Veaquach/LBBattlegroundsscript/refs/heads/main/Universal%20Lucky%20Block%20Battle%20Grounds%20Script.txt"))()')
+                            elseif queue_on_teleport then
+                                queue_on_teleport('loadstring(game:HttpGet("https://raw.githubusercontent.com/Veaquach/LBBattlegroundsscript/refs/heads/main/Universal%20Lucky%20Block%20Battle%20Grounds%20Script.txt"))()')
+                            end
+                            TeleportService:TeleportToPlaceInstance(ServerHopGameID, ID, game.Players.LocalPlayer)
+                        end)
+                        wait(4)
+                        return
+                    end
+                end
+            end
+        end
+        TPReturner()
+    end,
+})
+
+local Tab = Window:CreateTab("Toggles", "toggle-right")
+
+local Toggle = Tab:CreateToggle({
+    Name = "Infinite Jump",
+    CurrentValue = false,
+    Flag = "InfiniteJump",
+    Callback = (function()
+        local connection
+        local charConnection
+        return function(Value)
+            local Player = game:GetService("Players").LocalPlayer
+            local UIS = game:GetService("UserInputService")
+            local function setupCharacter(Character)
+                if connection then connection:Disconnect() end
+                connection = UIS.InputBegan:Connect(function(input, gameProcessed)
+                    if input.KeyCode == Enum.KeyCode.Space then
+                        local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+                        if Humanoid then
+                            Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                        end
+                    end
+                end)
+            end
+            if Value then
+                if Player.Character then
+                    setupCharacter(Player.Character)
+                end
+                if not charConnection then
+                    charConnection = Player.CharacterAdded:Connect(setupCharacter)
+                end
+            else
+                if connection then
+                    connection:Disconnect()
+                    connection = nil
+                end
+                if charConnection then
+                    charConnection:Disconnect()
+                    charConnection = nil
+                end
+            end
+        end
+    end)(),
 })
