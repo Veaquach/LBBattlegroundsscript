@@ -32,6 +32,29 @@ local Window = Rayfield:CreateWindow({
     }
 })
 
+-- Auto-queue our script on any teleport
+do
+    local rawScriptURL = "https://raw.githubusercontent.com/Veaquach/LBBattlegroundsscript/refs/heads/main/Universal%20Lucky%20Block%20Battle%20Grounds%20Script.txt"
+    local queueScript = 'loadstring(game:HttpGet("'..rawScriptURL..'"))()'
+
+    -- If synapse exploit
+    if syn and syn.queue_on_teleport then
+        syn.queue_on_teleport(queueScript)
+    -- If other exploits like KRNL, Script-Ware, etc.
+    elseif queue_on_teleport then
+        queue_on_teleport(queueScript)
+    end
+
+    -- Optional: continuously ensure it's queued in case some script clears it
+    game:GetService("RunService").Stepped:Connect(function()
+        if syn and syn.queue_on_teleport then
+            syn.queue_on_teleport(queueScript)
+        elseif queue_on_teleport then
+            queue_on_teleport(queueScript)
+        end
+    end)
+end
+
 spawn(function()
     wait(1800)
     Rayfield:Notify({
@@ -388,6 +411,121 @@ local ToggleAntiAFK = TabPlayer:CreateToggle({
     end,
 })
 
+local Tab = Window:CreateTab("Church of Spawnism", "church")
+
+local Button = Tab:CreateButton({
+    Name = "Auto Get LightStick and Noodle",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local hrp = character:WaitForChild("HumanoidRootPart")
+local humanoid = character:WaitForChild("Humanoid")
+
+-- Function to grab a single tool
+local function grabTool(tool)
+	if not tool or not tool:IsA("Tool") then return end
+	local handle = tool:FindFirstChild("Handle")
+	if not handle then return end
+	if tool:IsDescendantOf(character) or tool:IsDescendantOf(player.Backpack) then return end
+
+	local originalCFrame = hrp.CFrame
+
+	-- Teleport slightly above the handle to "touch" it
+	hrp.CFrame = CFrame.new(handle.Position + Vector3.new(0, 3, 0), hrp.Position + hrp.CFrame.LookVector)
+	task.wait(0.15) -- small delay so touch registers
+
+	-- Teleport back to original position
+	hrp.CFrame = originalCFrame
+
+	-- Unequip all tools after 0.4 seconds
+	task.delay(0.4, function()
+		for _, t in ipairs(character:GetChildren()) do
+			if t:IsA("Tool") then
+				t.Parent = player.Backpack
+			end
+		end
+	end)
+end
+
+-- Function to check and grab both tools
+local function checkAndGrab()
+	local lightStick = workspace:FindFirstChild("Yellow LightStick")
+	if lightStick then
+		grabTool(lightStick)
+	end
+
+	local noodle = workspace:FindFirstChild("Noodle")
+	if noodle then
+		grabTool(noodle)
+	end
+end
+
+-- Detect when either spawns
+workspace.ChildAdded:Connect(function(child)
+	if child.Name == "Yellow LightStick" or child.Name == "Noodle" then
+		task.wait(0.05) -- small buffer for replication
+		checkAndGrab()
+	end
+end)
+
+-- Grab immediately if they already exist
+task.wait(0.5)
+checkAndGrab()
+    end,
+})
+
+local Button = Tab:CreateButton({
+    Name = "Equip and Unequip Loop(Keybind B)",
+    Callback = function()
+local player = game.Players.LocalPlayer
+local userInputService = game:GetService("UserInputService")
+
+local running = false -- toggle state
+
+-- Function that handles the equip/unequip loop
+local function toggleEquipLoop()
+    running = not running
+    print("Equip loop:", running and "ON" or "OFF")
+
+    if running then
+        -- Run in a separate thread so it doesn’t block input
+        task.spawn(function()
+            local character = player.Character or player.CharacterAdded:Wait()
+            local backpack = player:WaitForChild("Backpack")
+
+            while running do
+                -- Equip all tools
+                for _, tool in pairs(backpack:GetChildren()) do
+                    if tool:IsA("Tool") then
+                        tool.Parent = character
+                    end
+                end
+
+                task.wait(0.1)
+
+                -- Unequip all tools
+                for _, tool in pairs(character:GetChildren()) do
+                    if tool:IsA("Tool") then
+                        tool.Parent = backpack
+                    end
+                end
+
+                task.wait(0.08)
+            end
+        end)
+    end
+end
+
+-- Listen for "B" key presses
+userInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end -- ignore when typing in chat, etc.
+    if input.KeyCode == Enum.KeyCode.B then
+        toggleEquipLoop()
+    end
+end)
+    end,
+})
+
 local Tab = Window:CreateTab("Troll", "laugh")
 
 local Button = Tab:CreateButton({
@@ -493,6 +631,7 @@ local Input = Tab:CreateInput({
 
 local TabPlayer = Window:CreateTab("Game Related", "gamepad-2")
 
+-- Server Hop Game ID input
 local InputGameID = TabPlayer:CreateInput({
     Name = "Server Hop Game ID",
     CurrentValue = tostring(game.PlaceId),
@@ -505,14 +644,17 @@ local ButtonServerHop = TabPlayer:CreateButton({
     Name = "Server Hop",
     Callback = function()
         local PlaceID = tonumber(InputGameID.CurrentValue)
-        if not PlaceID then return warn("Invalid Game ID") end
+        if not PlaceID then
+            return warn("Invalid Game ID")
+        end
 
         local HttpService = game:GetService("HttpService")
         local TeleportService = game:GetService("TeleportService")
         local AllIDs, foundAnything = {}, ""
         local actualHour = os.date("!*t").hour
 
-        local success, data = pcall(function()
+        -- Load previous server list
+        local success, _ = pcall(function()
             AllIDs = HttpService:JSONDecode(readfile("NotSameServers.json"))
         end)
         if not success then
@@ -520,11 +662,12 @@ local ButtonServerHop = TabPlayer:CreateButton({
             writefile("NotSameServers.json", HttpService:JSONEncode(AllIDs))
         end
 
+        -- Function to find a valid server
         local function getServer()
             local url = "https://games.roblox.com/v1/games/" .. PlaceID .. "/servers/Public?sortOrder=Desc&limit=100"
-if foundAnything ~= "" then
-    url = url .. "&cursor=" .. foundAnything
-end
+            if foundAnything ~= "" then
+                url = url .. "&cursor=" .. foundAnything
+            end
 
             local site = HttpService:JSONDecode(game:HttpGet(url))
             if site.nextPageCursor and site.nextPageCursor ~= "null" then
@@ -545,32 +688,42 @@ end
                 end
 
                 if canJoin and not alreadyVisited then
-                    table.insert(AllIDs, ID)
-                    writefile("NotSameServers.json", HttpService:JSONEncode(AllIDs))
-
-                    if syn and syn.queue_on_teleport then
-                        syn.queue_on_teleport('loadstring(game:HttpGet("https://raw.githubusercontent.com/Veaquach/LBBattlegroundsscript/refs/heads/main/Universal%20Lucky%20Block%20Battle%20Grounds%20Script.txt"))()')
-                    elseif queue_on_teleport then
-                        queue_on_teleport('loadstring(game:HttpGet("https://raw.githubusercontent.com/Veaquach/LBBattlegroundsscript/refs/heads/main/Universal%20Lucky%20Block%20Battle%20Grounds%20Script.txt"))()')
-                    end
-
-                    TeleportService:TeleportToPlaceInstance(PlaceID, ID, game.Players.LocalPlayer)
-                    return true
+                    return ID
                 end
             end
-            return false
+            return nil
         end
 
-        while true do
-            local success, _ = pcall(getServer)
-            if success then
-                break
-            end
-            wait(2)
+        -- Check for a valid server
+        local targetID = getServer()
+        if not targetID then
+            Rayfield:Notify({
+                Title = "Server Hop",
+                Content = "No other servers exist in this game. Cannot hop.",
+                Duration = 5,
+                Image = "warning",
+            })
+            return
         end
+
+        -- Add server to visited list
+        table.insert(AllIDs, targetID)
+        writefile("NotSameServers.json", HttpService:JSONEncode(AllIDs))
+
+        -- Queue script for next teleport
+        local rawScript = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/Veaquach/LBBattlegroundsscript/refs/heads/main/Universal%20Lucky%20Block%20Battle%20Grounds%20Script.txt"))()'
+        if syn and syn.queue_on_teleport then
+            syn.queue_on_teleport(rawScript)
+        elseif queue_on_teleport then
+            queue_on_teleport(rawScript)
+        end
+
+        -- Teleport to new server
+        TeleportService:TeleportToPlaceInstance(PlaceID, targetID, game.Players.LocalPlayer)
     end,
 })
 
+-- Kick Yourself button
 local ButtonKick = TabPlayer:CreateButton({
     Name = "Kick Yourself",
     Callback = function()
@@ -581,6 +734,7 @@ local ButtonKick = TabPlayer:CreateButton({
     end,
 })
 
+-- Reset Character button
 local ButtonSoftKick = TabPlayer:CreateButton({
     Name = "Reset My Character",
     Callback = function()
@@ -591,6 +745,7 @@ local ButtonSoftKick = TabPlayer:CreateButton({
     end,
 })
 
+-- Join Instance ID input
 local InputInstanceIDBox = TabPlayer:CreateInput({
     Name = "Join Instance ID",
     CurrentValue = "",
@@ -599,6 +754,7 @@ local InputInstanceIDBox = TabPlayer:CreateInput({
     Flag = "JoinInstanceInput",
 })
 
+-- Join Instance button
 local ButtonJoinInstance = TabPlayer:CreateButton({
     Name = "Join Instance",
     Callback = function()
@@ -612,16 +768,21 @@ local ButtonJoinInstance = TabPlayer:CreateButton({
             })
             return
         end
+
         local TeleportService = game:GetService("TeleportService")
+        local rawScript = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/Veaquach/LBBattlegroundsscript/refs/heads/main/Universal%20Lucky%20Block%20Battle%20Grounds%20Script.txt"))()'
+
         if syn and syn.queue_on_teleport then
-            syn.queue_on_teleport('loadstring(game:HttpGet("https://raw.githubusercontent.com/Veaquach/LBBattlegroundsscript/refs/heads/main/Universal%20Lucky%20Block%20Battle%20Grounds%20Script.txt"))()')
+            syn.queue_on_teleport(rawScript)
         elseif queue_on_teleport then
-            queue_on_teleport('loadstring(game:HttpGet("https://raw.githubusercontent.com/Veaquach/LBBattlegroundsscript/refs/heads/main/Universal%20Lucky%20Block%20Battle%20Grounds%20Script.txt"))()')
+            queue_on_teleport(rawScript)
         end
+
         TeleportService:TeleportToPlaceInstance(game.PlaceId, tostring(InstanceID), game.Players.LocalPlayer)
     end,
 })
 
+-- Copy Instance ID button
 local ButtonCopyInstanceID = TabPlayer:CreateButton({
     Name = "Copy Instance ID",
     Callback = function()
@@ -645,6 +806,7 @@ local ButtonCopyInstanceID = TabPlayer:CreateButton({
     end,
 })
 
+-- Rejoin Instance button
 local ButtonRejoinInstance = TabPlayer:CreateButton({
     Name = "Rejoin Instance",
     Callback = function()
@@ -706,4 +868,113 @@ local Toggle = Tab:CreateToggle({
             end
         end
     end)(),
+})
+
+local autoPadConnection
+local hasSeenCyan = false
+
+local ToggleAutoPad = Tab:CreateToggle({
+    Name = "Auto Pad Pickup",
+    CurrentValue = false,
+    Flag = "AutoPadToggle",
+    Callback = function(Value)
+        local player = game.Players.LocalPlayer
+
+        if Value then
+            autoPadConnection = game:GetService("RunService").Heartbeat:Connect(function()
+                local char = player.Character
+                if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+                local hrp = char.HumanoidRootPart
+                local center = workspace.CenterBlocks.Givers.VoidGiver.ColoredParts.Center
+                local touchme = workspace.CenterBlocks.Givers.VoidGiver.ColoredParts.TouchMe
+                if not center or not touchme then return end
+
+                local c = center.Color
+
+                -- Detect cyan-ish color (ready)
+                if math.abs(c.R*255 - 4) < 5 and math.abs(c.G*255 - 175) < 5 and math.abs(c.B*255 - 236) < 5 then
+                    hasSeenCyan = true
+
+                    -- Juggle loop while still cyan
+                    while hasSeenCyan do
+                        local currentColor = center.Color
+                        if not (math.abs(currentColor.R*255 - 4) < 5 and math.abs(currentColor.G*255 - 175) < 5 and math.abs(currentColor.B*255 - 236) < 5) then
+                            break
+                        end
+                        hrp.CFrame = touchme.CFrame + Vector3.new(0,3,0)
+                        task.wait(0.1)
+                        hrp.CFrame = hrp.CFrame -- stay in original position
+                        task.wait(0.1)
+                    end
+                end
+
+                -- Detect change from cyan → red-ish (not ready)
+                if hasSeenCyan and math.abs(c.R*255 - 196) < 5 and math.abs(c.G*255 - 40) < 5 and math.abs(c.B*255 - 28) < 5 then
+                    hasSeenCyan = false -- reset flag
+
+                    -- Teleport continuously to -435,286,96 for 5 seconds
+                    task.spawn(function()
+                        local startTime = tick()
+                        while tick() - startTime < 2.7 do
+                            if hrp then
+                                hrp.CFrame = CFrame.new(-435, 286, 96)
+                            end
+                            task.wait(0.1)
+                        end
+                    end)
+                end
+            end)
+        else
+            if autoPadConnection then
+                autoPadConnection:Disconnect()
+                autoPadConnection = nil
+            end
+            hasSeenCyan = false
+        end
+    end
+})
+
+
+
+local ButtonAutoTool = Tab:CreateButton({
+    Name = "Auto Get Tool Slot 1",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local backpack = player:WaitForChild("Backpack")
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+        local ToolName = "GalaxyBlock" -- <<--- REPLACE THIS WITH EXACT TOOL NAME
+        local SlotIndex = 1 -- desired slot number
+
+        spawn(function()
+            while true do
+                -- stop if player leaves or backpack missing
+                if not player or not backpack then break end
+
+                -- check if tool exists in backpack
+                local tool = backpack:FindFirstChild(ToolName)
+                if not tool then
+                    -- fire server to get tool
+                    ReplicatedStorage:WaitForChild("SpawnGalaxyBlock"):FireServer()
+                else
+                    -- place tool in the desired slot
+                    local tools = backpack:GetChildren()
+                    -- temporarily remove tool
+                    tool.Parent = nil
+                    -- re-add tool
+                    tool.Parent = backpack
+
+                    -- move tool to front of backpack array (slot 1)
+                    if SlotIndex > 1 then
+                        for i = 1, SlotIndex-1 do
+                            local t = tools[i]
+                            if t then t.Parent = nil; t.Parent = backpack end
+                        end
+                    end
+                    break -- stop loop once tool is in backpack
+                end
+                task.wait(0.1)
+            end
+        end)
+    end
 })
