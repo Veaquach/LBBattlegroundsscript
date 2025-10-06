@@ -32,6 +32,29 @@ local Window = Rayfield:CreateWindow({
     }
 })
 
+-- Auto-queue our script on any teleport
+do
+    local rawScriptURL = "https://raw.githubusercontent.com/Veaquach/LBBattlegroundsscript/refs/heads/main/Universal%20Lucky%20Block%20Battle%20Grounds%20Script.txt"
+    local queueScript = 'loadstring(game:HttpGet("'..rawScriptURL..'"))()'
+
+    -- If synapse exploit
+    if syn and syn.queue_on_teleport then
+        syn.queue_on_teleport(queueScript)
+    -- If other exploits like KRNL, Script-Ware, etc.
+    elseif queue_on_teleport then
+        queue_on_teleport(queueScript)
+    end
+
+    -- Optional: continuously ensure it's queued in case some script clears it
+    game:GetService("RunService").Stepped:Connect(function()
+        if syn and syn.queue_on_teleport then
+            syn.queue_on_teleport(queueScript)
+        elseif queue_on_teleport then
+            queue_on_teleport(queueScript)
+        end
+    end)
+end
+
 spawn(function()
     wait(1800)
     Rayfield:Notify({
@@ -54,10 +77,10 @@ spawn(function()
                     local foundAnything = ""
                     local actualHour = os.date("!*t").hour
 
-                    local success = pcall(function()
+                    local File = pcall(function()
                         AllIDs = HttpService:JSONDecode(readfile("NotSameServers.json"))
                     end)
-                    if not success then
+                    if not File then
                         table.insert(AllIDs, actualHour)
                         writefile("NotSameServers.json", HttpService:JSONEncode(AllIDs))
                     end
@@ -74,12 +97,11 @@ spawn(function()
                             foundAnything = Site.nextPageCursor
                         end
 
-                        for i, v in pairs(Site.data) do
+                        for i,v in pairs(Site.data) do
                             local ID = tostring(v.id)
                             local Possible = true
-
                             if tonumber(v.maxPlayers) > tonumber(v.playing) then
-                                for _, Existing in pairs(AllIDs) do
+                                for _,Existing in pairs(AllIDs) do
                                     if ID == tostring(Existing) then
                                         Possible = false
                                         break
