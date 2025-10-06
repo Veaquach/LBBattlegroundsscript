@@ -32,27 +32,35 @@ local Window = Rayfield:CreateWindow({
     }
 })
 
--- Auto-queue our script on any teleport
-do
+-- Function to queue our script for the next teleport
+local function queueNextTeleport()
     local rawScriptURL = "https://raw.githubusercontent.com/Veaquach/LBBattlegroundsscript/refs/heads/main/Universal%20Lucky%20Block%20Battle%20Grounds%20Script.txt"
     local queueScript = 'loadstring(game:HttpGet("'..rawScriptURL..'"))()'
 
-    -- If synapse exploit
     if syn and syn.queue_on_teleport then
         syn.queue_on_teleport(queueScript)
-    -- If other exploits like KRNL, Script-Ware, etc.
     elseif queue_on_teleport then
         queue_on_teleport(queueScript)
     end
+end
 
-    -- Optional: continuously ensure it's queued in case some script clears it
-    game:GetService("RunService").Stepped:Connect(function()
-        if syn and syn.queue_on_teleport then
-            syn.queue_on_teleport(queueScript)
-        elseif queue_on_teleport then
-            queue_on_teleport(queueScript)
-        end
-    end)
+-- Example: inside your Server Hop or Rejoin button callback
+ServerHopButton.Callback = function()
+    queueNextTeleport() -- queue only when you click "Server Hop"
+    
+    local TeleportService = game:GetService("TeleportService")
+    local PlaceID = game.PlaceId
+    -- call your teleport logic here
+    TeleportService:TeleportToPlaceInstance(PlaceID, someServerID, game.Players.LocalPlayer)
+end
+
+-- Example: inside your Rejoin button callback
+RejoinButton.Callback = function()
+    queueNextTeleport() -- queue only when you click "Rejoin"
+    
+    local TeleportService = game:GetService("TeleportService")
+    local PlaceID = game.PlaceId
+    TeleportService:Teleport(PlaceID, game.Players.LocalPlayer)
 end
 
 spawn(function()
@@ -77,10 +85,10 @@ spawn(function()
                     local foundAnything = ""
                     local actualHour = os.date("!*t").hour
 
-                    local File = pcall(function()
+                    local success = pcall(function()
                         AllIDs = HttpService:JSONDecode(readfile("NotSameServers.json"))
                     end)
-                    if not File then
+                    if not success then
                         table.insert(AllIDs, actualHour)
                         writefile("NotSameServers.json", HttpService:JSONEncode(AllIDs))
                     end
@@ -97,11 +105,12 @@ spawn(function()
                             foundAnything = Site.nextPageCursor
                         end
 
-                        for i,v in pairs(Site.data) do
+                        for i, v in pairs(Site.data) do
                             local ID = tostring(v.id)
                             local Possible = true
+
                             if tonumber(v.maxPlayers) > tonumber(v.playing) then
-                                for _,Existing in pairs(AllIDs) do
+                                for _, Existing in pairs(AllIDs) do
                                     if ID == tostring(Existing) then
                                         Possible = false
                                         break
