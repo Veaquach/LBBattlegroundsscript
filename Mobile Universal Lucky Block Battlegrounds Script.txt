@@ -1,0 +1,941 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+    Name = "LB Battlegrounds",
+    Icon = 0,
+    LoadingTitle = "Rayfield Interface Suite",
+    LoadingSubtitle = "by minkminkmilk2 on Roblox",
+    ShowText = "Rayfield",
+    Theme = "Default",
+    ToggleUIKeybind = "K",
+    DisableRayfieldPrompts = false,
+    DisableBuildWarnings = false,
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = nil,
+        FileName = "Big Hub"
+    },
+    Discord = {
+        Enabled = false,
+        Invite = "noinvitelink",
+        RememberJoins = true
+    },
+    KeySystem = false,
+    KeySettings = {
+        Title = "Untitled",
+        Subtitle = "Key System",
+        Note = "No method of obtaining the key is provided",
+        FileName = "Key",
+        SaveKey = true,
+        GrabKeyFromSite = false,
+        Key = {"Hello"}
+    }
+})
+
+spawn(function()
+    wait(1800)
+    Rayfield:Notify({
+        Title = "Time Check",
+        Content = "Do you want to leave? You have been playing for 30 minutes in this instance.",
+        Duration = 7,
+        Image = 4483345998,
+        Actions = {
+            Ignore = {
+                Name = "Stay",
+                Callback = function() end
+            },
+            Callback = {
+                Name = "Server Hop",
+                Callback = function()
+                    local TeleportService = game:GetService("TeleportService")
+                    local HttpService = game:GetService("HttpService")
+                    local PlaceID = game.PlaceId
+                    local AllIDs = {}
+                    local foundAnything = ""
+                    local actualHour = os.date("!*t").hour
+
+                    local File = pcall(function()
+                        AllIDs = HttpService:JSONDecode(readfile("NotSameServers.json"))
+                    end)
+                    if not File then
+                        table.insert(AllIDs, actualHour)
+                        writefile("NotSameServers.json", HttpService:JSONEncode(AllIDs))
+                    end
+
+                    local function TPReturner()
+                        local Site
+                        if foundAnything == "" then
+                            Site = HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100'))
+                        else
+                            Site = HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100&cursor=' .. foundAnything))
+                        end
+
+                        if Site.nextPageCursor and Site.nextPageCursor ~= "null" then
+                            foundAnything = Site.nextPageCursor
+                        end
+
+                        for i,v in pairs(Site.data) do
+                            local ID = tostring(v.id)
+                            local Possible = true
+                            if tonumber(v.maxPlayers) > tonumber(v.playing) then
+                                for _,Existing in pairs(AllIDs) do
+                                    if ID == tostring(Existing) then
+                                        Possible = false
+                                        break
+                                    end
+                                end
+
+                                if Possible then
+                                    table.insert(AllIDs, ID)
+                                    pcall(function()
+                                        writefile("NotSameServers.json", HttpService:JSONEncode(AllIDs))
+
+                                        if syn and syn.queue_on_teleport then
+                                            syn.queue_on_teleport('loadstring(game:HttpGet("https://raw.githubusercontent.com/Veaquach/LBBattlegroundsscript/refs/heads/main/Universal%20Lucky%20Block%20Battle%20Grounds%20Script.txt"))()')
+                                        elseif queue_on_teleport then
+                                            queue_on_teleport('loadstring(game:HttpGet("https://raw.githubusercontent.com/Veaquach/LBBattlegroundsscript/refs/heads/main/Universal%20Lucky%20Block%20Battle%20Grounds%20Script.txt"))()')
+                                        end
+
+                                        TeleportService:TeleportToPlaceInstance(PlaceID, ID, game.Players.LocalPlayer)
+                                    end)
+                                    wait(4)
+                                    return
+                                end
+                            end
+                        end
+                    end
+
+                    TPReturner()
+                end
+            }
+        }
+    })
+end)
+
+local Tab = Window:CreateTab("Lucky Blocks", "blocks")
+
+local Button = Tab:CreateButton({
+    Name = "Galaxy Block",
+    Callback = function()
+        game:GetService("ReplicatedStorage").SpawnGalaxyBlock:FireServer()
+    end,
+})
+
+local Button = Tab:CreateButton({
+    Name = "Super Block",
+    Callback = function()
+        game:GetService("ReplicatedStorage").SpawnSuperBlock:FireServer()
+    end,
+})
+
+local Button = Tab:CreateButton({
+    Name = "Rainbow Block",
+    Callback = function()
+        game:GetService("ReplicatedStorage").SpawnRainbowBlock:FireServer()
+    end,
+})
+
+local Button = Tab:CreateButton({
+    Name = "Lucky Block",
+    Callback = function()
+        game:GetService("ReplicatedStorage").SpawnLuckyBlock:FireServer()
+    end,
+})
+
+local Button = Tab:CreateButton({
+    Name = "Diamond Block",
+    Callback = function()
+        game:GetService("ReplicatedStorage").SpawnDiamondBlock:FireServer()
+    end,
+})
+
+local TabPlayer = Window:CreateTab("Player", "user-round")
+
+local ButtonTPTool = TabPlayer:CreateButton({
+    Name = "Give TP Tool",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local mouse = player:GetMouse()
+
+        if player.Backpack:FindFirstChild("TP Tool") then
+            Rayfield:Notify({
+                Title = "TP Tool",
+                Content = "You already have the TP Tool!",
+                Duration = 2,
+                Image = "cursor-click"
+            })
+            return
+        end
+
+        local TPTool = Instance.new("Tool")
+        TPTool.Name = "TP Tool"
+        TPTool.RequiresHandle = false
+        TPTool.CanBeDropped = false
+        TPTool.Parent = player.Backpack
+
+        local handle = Instance.new("Part")
+        handle.Size = Vector3.new(1,1,1)
+        handle.Transparency = 1
+        handle.CanCollide = false
+        handle.Anchored = true
+        handle.Parent = TPTool
+
+        TPTool.Grip = CFrame.new()
+
+        TPTool.Activated:Connect(function()
+            local targetPos = mouse.Hit.Position
+            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                player.Character.HumanoidRootPart.CFrame = CFrame.new(targetPos + Vector3.new(0,3,0))
+            end
+        end)
+
+        Rayfield:Notify({
+            Title = "TP Tool Added",
+            Content = "Click anywhere to teleport. Tool is invisible and client-side.",
+            Duration = 3,
+            Image = "mouse-pointer-click"
+        })
+    end
+})
+
+local NoclipToggle = TabPlayer:CreateToggle({
+    Name = "Noclip (Walk Through Walls)",
+    CurrentValue = false,
+    Flag = "NoclipToggle",
+    Callback = function(Value)
+        local player = game.Players.LocalPlayer
+        local char = player.Character
+        if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+
+        if _G.NoclipConnection then
+            _G.NoclipConnection:Disconnect()
+            _G.NoclipConnection = nil
+        end
+
+        if Value then
+            _G.NoclipConnection = game:GetService("RunService").Stepped:Connect(function()
+                for _, part in pairs(char:GetChildren()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
+                end
+            end)
+            Rayfield:Notify({
+                Title = "Noclip Enabled",
+                Content = "You can now walk through walls.",
+                Duration = 2,
+                Image = "check",
+            })
+        else
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            if humanoid and humanoid.Health > 0 then
+                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+            Rayfield:Notify({
+                Title = "Noclip Disabled",
+                Content = "Collisions restored.",
+                Duration = 2.5,
+                Image = "check",
+            })
+        end
+    end
+})
+
+local SliderSpeed = TabPlayer:CreateSlider({
+    Name = "Speed",
+    Range = {16, 300},
+    Increment = 2,
+    Suffix = "WalkSpeed",
+    CurrentValue = 16,
+    Flag = "SpeedSlider",
+    Callback = function(Value)
+        local player = game.Players.LocalPlayer
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid.WalkSpeed = Value
+        end
+    end,
+})
+
+local SliderJump = TabPlayer:CreateSlider({
+    Name = "JumpPower",
+    Range = {50, 500},
+    Increment = 2,
+    Suffix = "JumpPower",
+    CurrentValue = 50,
+    Flag = "JumpSlider",
+    Callback = function(Value)
+        local player = game.Players.LocalPlayer
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid.JumpPower = Value
+        end
+    end,
+})
+
+local SliderFOV = TabPlayer:CreateSlider({
+    Name = "FOV",
+    Range = {5, 120},
+    Increment = 1,
+    Suffix = "FOV",
+    CurrentValue = 70,
+    Flag = "FOVSlider",
+    Callback = function(Value)
+        workspace.CurrentCamera.FieldOfView = Value
+    end,
+})
+
+local SliderGravity = TabPlayer:CreateSlider({
+    Name = "Gravity",
+    Range = {0, 1000},
+    Increment = 2,
+    Suffix = "Gravity",
+    CurrentValue = 100,
+    Flag = "GravitySlider",
+    Callback = function(Value)
+        workspace.Gravity = Value
+    end,
+})
+
+local ButtonReset = TabPlayer:CreateButton({
+    Name = "Default Values (Doesn't update visually)",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid.WalkSpeed = 16
+            player.Character.Humanoid.JumpPower = 50
+        end
+
+        workspace.CurrentCamera.FieldOfView = 70
+        workspace.Gravity = 196
+
+        local sliders = {
+            {SliderSpeed, 16},
+            {SliderJump, 50},
+            {SliderFOV, 70},
+            {SliderGravity, 196},
+        }
+
+        for _, data in pairs(sliders) do
+            local sliderObj, defaultValue = unpack(data)
+            sliderObj.CurrentValue = defaultValue
+            if sliderObj.Callback then
+                sliderObj.Callback(defaultValue)
+            end
+        end
+    end,
+})
+
+local TabPlayer = Window:CreateTab("Self-Care", "heart")
+
+local ToggleAntiAFK = TabPlayer:CreateToggle({
+    Name = "Anti-AFK (19 min)",
+    CurrentValue = false,
+    Flag = "AntiAFKToggle",
+    Callback = function(Value)
+        local Players = game:GetService("Players")
+        local Player = Players.LocalPlayer
+        local VirtualUser = game:GetService("VirtualUser")
+        local lastMovementTime = tick()
+        local moveConnection
+        local charConnection
+
+        local function resetTimer()
+            lastMovementTime = tick()
+        end
+
+        local function onCharacterAdded(char)
+            local hrp = char:WaitForChild("HumanoidRootPart")
+            if moveConnection then moveConnection:Disconnect() end
+            moveConnection = hrp:GetPropertyChangedSignal("Position"):Connect(resetTimer)
+        end
+
+        if Value then
+            Rayfield:Notify({
+                Title = "Anti-AFK Enabled",
+                Content = "Your character will be automatically clicked every 19 minutes to prevent AFK kick.",
+                Duration = 4,
+                Image = "check",
+            })
+
+            if Player.Character then
+                onCharacterAdded(Player.Character)
+            end
+            charConnection = Player.CharacterAdded:Connect(onCharacterAdded)
+
+            spawn(function()
+                while ToggleAntiAFK.CurrentValue do
+                    if tick() - lastMovementTime >= 19 * 60 then
+                        pcall(function()
+                            VirtualUser:CaptureController()
+                            VirtualUser:ClickButton1(Vector2.new())
+                        end)
+                        Rayfield:Notify({
+                            Title = "Anti-AFK Triggered",
+                            Content = "A real click was simulated to prevent AFK kick.",
+                            Duration = 5,
+                            Image = "check",
+                        })
+                        resetTimer()
+                    end
+                    wait(5)
+                end
+            end)
+        else
+            if moveConnection then moveConnection:Disconnect() end
+            if charConnection then charConnection:Disconnect() end
+        end
+    end,
+})
+
+local Tab = Window:CreateTab("Church of Spawnism", "church")
+
+local Button = Tab:CreateButton({
+    Name = "Auto Get LightStick and Noodle",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local hrp = character:WaitForChild("HumanoidRootPart")
+local humanoid = character:WaitForChild("Humanoid")
+
+-- Function to grab a single tool
+local function grabTool(tool)
+	if not tool or not tool:IsA("Tool") then return end
+	local handle = tool:FindFirstChild("Handle")
+	if not handle then return end
+	if tool:IsDescendantOf(character) or tool:IsDescendantOf(player.Backpack) then return end
+
+	local originalCFrame = hrp.CFrame
+
+	-- Teleport slightly above the handle to "touch" it
+	hrp.CFrame = CFrame.new(handle.Position + Vector3.new(0, 3, 0), hrp.Position + hrp.CFrame.LookVector)
+	task.wait(0.15) -- small delay so touch registers
+
+	-- Teleport back to original position
+	hrp.CFrame = originalCFrame
+
+	-- Unequip all tools after 0.4 seconds
+	task.delay(0.4, function()
+		for _, t in ipairs(character:GetChildren()) do
+			if t:IsA("Tool") then
+				t.Parent = player.Backpack
+			end
+		end
+	end)
+end
+
+-- Function to check and grab both tools
+local function checkAndGrab()
+	local lightStick = workspace:FindFirstChild("Yellow LightStick")
+	if lightStick then
+		grabTool(lightStick)
+	end
+
+	local noodle = workspace:FindFirstChild("Noodle")
+	if noodle then
+		grabTool(noodle)
+	end
+end
+
+-- Detect when either spawns
+workspace.ChildAdded:Connect(function(child)
+	if child.Name == "Yellow LightStick" or child.Name == "Noodle" then
+		task.wait(0.05) -- small buffer for replication
+		checkAndGrab()
+	end
+end)
+
+-- Grab immediately if they already exist
+task.wait(0.5)
+checkAndGrab()
+    end,
+})
+
+local Button = Tab:CreateButton({
+    Name = "Equip and Unequip Loop(Keybind B)",
+    Callback = function()
+local player = game.Players.LocalPlayer
+local userInputService = game:GetService("UserInputService")
+
+local running = false -- toggle state
+
+-- Function that handles the equip/unequip loop
+local function toggleEquipLoop()
+    running = not running
+    print("Equip loop:", running and "ON" or "OFF")
+
+    if running then
+        -- Run in a separate thread so it doesn’t block input
+        task.spawn(function()
+            local character = player.Character or player.CharacterAdded:Wait()
+            local backpack = player:WaitForChild("Backpack")
+
+            while running do
+                -- Equip all tools
+                for _, tool in pairs(backpack:GetChildren()) do
+                    if tool:IsA("Tool") then
+                        tool.Parent = character
+                    end
+                end
+
+                task.wait(0.1)
+
+                -- Unequip all tools
+                for _, tool in pairs(character:GetChildren()) do
+                    if tool:IsA("Tool") then
+                        tool.Parent = backpack
+                    end
+                end
+
+                task.wait(0.08)
+            end
+        end)
+    end
+end
+
+-- Listen for "B" key presses
+userInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end -- ignore when typing in chat, etc.
+    if input.KeyCode == Enum.KeyCode.B then
+        toggleEquipLoop()
+    end
+end)
+    end,
+})
+
+local Tab = Window:CreateTab("Troll", "laugh")
+
+local Button = Tab:CreateButton({
+    Name = "Fling GUI",
+    Callback = function()
+        loadstring((function(t)local s=''for i=1,#t,2 do s=s..string.char(t[i]//t[i+1])end return s end)({216,2,333,3,485,5,700,7,1265,11,1508,13,1938,17,1995,19,2530,23,2987,29,80,2,309,3,485,5,763,7,1111,11,754,13,1224,17,2204,19,2668,23,3248,29,142,2,303,3,580,5,280,7,374,11,1352,13,1972,17,2204,19,2576,23,3335,29,116,2,141,3,235,5,721,7,1188,11,1443,13,1972,17,874,19,2415,23,3219,29,94,2,345,3,550,5,735,7,1232,11,1456,13,1717,17,2204,19,2645,23,1363,29,208,2,168,3,270,5,721,7,1210,11,1495,13,1700,17,1957,19,2691,23,2900,29,94,2,342,3,485,5,833,7,517,11,910,13,1836,17,1995,19,2530,23,2987,29,142,2,351,3,525,5,322,7,1188,11,1521,13,1649,17,646,19,943,23,1189,29,80,2,123,3}))()
+    end,
+})
+
+local Button = Tab:CreateButton({
+    Name = "Portal Gun(Not FE)",
+    Callback = function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/randomguy194/dollar-tree-portal-gun/main/portal%20gun%20ported'))()
+    end,
+})
+
+local Tab = Window:CreateTab("Universal", "orbit")
+
+local Button = Tab:CreateButton({
+    Name = "Infinite Yield",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+    end,
+})
+
+local Button = Tab:CreateButton({
+    Name = "Nameless Admin",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/ltseverydayyou/Nameless-Admin/main/Source.lua"))()
+    end,
+})
+
+local Button = Tab:CreateButton({
+    Name = "Fly",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"))()
+    end,
+})
+
+local Button = Tab:CreateButton({
+    Name = "Jerk Off (R6)",
+    Callback = function()
+        loadstring(game:HttpGet("https://pastefy.app/wa3v2Vgm/raw"))()
+    end,
+})
+
+local Button = Tab:CreateButton({
+    Name = "Jerk Off (R15)",
+    Callback = function()
+        loadstring(game:HttpGet("https://pastefy.app/YZoglOyJ/raw"))()
+    end,
+})
+
+local Tab = Window:CreateTab("Input Boxes (More Accurate)", "text-cursor-input")
+
+local Input = Tab:CreateInput({
+    Name = "WalkSpeed",
+    CurrentValue = "16",
+    PlaceholderText = "Enter walk speed",
+    RemoveTextAfterFocusLost = false,
+    Flag = "SpeedInput",
+    Callback = function(Text)
+        local Value = tonumber(Text)
+        if Value then
+            local player = game.Players.LocalPlayer
+            if player.Character and player.Character:FindFirstChild("Humanoid") then
+                player.Character.Humanoid.WalkSpeed = Value
+            end
+        end
+    end,
+})
+
+local Input = Tab:CreateInput({
+    Name = "Jump Power",
+    CurrentValue = "",
+    PlaceholderText = "Jump Power",
+    RemoveTextAfterFocusLost = false,
+    Flag = "JPInput",
+    Callback = function(Text)
+        local Value = tonumber(Text)
+        if Value then
+            local player = game.Players.LocalPlayer
+            if player.Character and player.Character:FindFirstChild("Humanoid") then
+                player.Character.Humanoid.JumpPower = Value
+            end
+        end
+    end,
+})
+
+local Input = Tab:CreateInput({
+    Name = "Gravity",
+    CurrentValue = "100",
+    PlaceholderText = "Enter Gravity",
+    RemoveTextAfterFocusLost = false,
+    Flag = "GravityInput",
+    Callback = function(Text)
+        local Value = tonumber(Text)
+        if Value then
+            workspace.Gravity = Value
+        end
+    end,
+})
+
+local TabPlayer = Window:CreateTab("Game Related", "gamepad-2")
+
+-- Server Hop Game ID input
+local InputGameID = TabPlayer:CreateInput({
+    Name = "Server Hop Game ID",
+    CurrentValue = tostring(game.PlaceId),
+    PlaceholderText = "Enter Game/Place ID",
+    RemoveTextAfterFocusLost = false,
+    Flag = "ServerHopInput",
+})
+
+local ButtonServerHop = TabPlayer:CreateButton({
+    Name = "Server Hop",
+    Callback = function()
+        local PlaceID = tonumber(InputGameID.CurrentValue)
+        if not PlaceID then
+            return warn("Invalid Game ID")
+        end
+
+        local HttpService = game:GetService("HttpService")
+        local TeleportService = game:GetService("TeleportService")
+        local AllIDs, foundAnything = {}, ""
+        local actualHour = os.date("!*t").hour
+
+        -- Load previous server list
+        local success, _ = pcall(function()
+            AllIDs = HttpService:JSONDecode(readfile("NotSameServers.json"))
+        end)
+        if not success then
+            table.insert(AllIDs, actualHour)
+            writefile("NotSameServers.json", HttpService:JSONEncode(AllIDs))
+        end
+
+        -- Function to find a valid server
+        local function getServer()
+            local url = "https://games.roblox.com/v1/games/" .. PlaceID .. "/servers/Public?sortOrder=Desc&limit=100"
+            if foundAnything ~= "" then
+                url = url .. "&cursor=" .. foundAnything
+            end
+
+            local site = HttpService:JSONDecode(game:HttpGet(url))
+            if site.nextPageCursor and site.nextPageCursor ~= "null" then
+                foundAnything = site.nextPageCursor
+            else
+                foundAnything = ""
+            end
+
+            for _, v in ipairs(site.data) do
+                local ID = tostring(v.id)
+                local canJoin = tonumber(v.playing) < tonumber(v.maxPlayers)
+                local alreadyVisited = false
+                for _, oldID in ipairs(AllIDs) do
+                    if oldID == ID then
+                        alreadyVisited = true
+                        break
+                    end
+                end
+
+                if canJoin and not alreadyVisited then
+                    return ID
+                end
+            end
+            return nil
+        end
+
+        -- Check for a valid server
+        local targetID = getServer()
+        if not targetID then
+            Rayfield:Notify({
+                Title = "Server Hop",
+                Content = "No other servers exist in this game. Cannot hop.",
+                Duration = 5,
+                Image = "warning",
+            })
+            return
+        end
+
+        -- Add server to visited list
+        table.insert(AllIDs, targetID)
+        writefile("NotSameServers.json", HttpService:JSONEncode(AllIDs))
+
+        -- Teleport to new server
+        TeleportService:TeleportToPlaceInstance(PlaceID, targetID, game.Players.LocalPlayer)
+    end,
+})
+
+-- Kick Yourself button
+local ButtonKick = TabPlayer:CreateButton({
+    Name = "Kick Yourself",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        if player.Character then
+            player:Kick("Whoops! you kicked yourself, was that a misclick?? Haha!")
+        end
+    end,
+})
+
+-- Reset Character button
+local ButtonSoftKick = TabPlayer:CreateButton({
+    Name = "Reset My Character",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        if player.Character then
+            player.Character:BreakJoints()
+        end
+    end,
+})
+
+-- Join Instance ID input
+local InputInstanceIDBox = TabPlayer:CreateInput({
+    Name = "Join Instance ID",
+    CurrentValue = "",
+    PlaceholderText = "Enter Instance ID",
+    RemoveTextAfterFocusLost = false,
+    Flag = "JoinInstanceInput",
+})
+
+-- Join Instance button
+local ButtonJoinInstance = TabPlayer:CreateButton({
+    Name = "Join Instance",
+    Callback = function()
+        local InstanceID = InputInstanceIDBox.CurrentValue
+        if InstanceID == "" or not InstanceID then
+            Rayfield:Notify({
+                Title = "No Instance ID Provided",
+                Content = "Enter a valid instance ID to join, get one from copying this server's Instance ID, or ask a friend.",
+                Duration = 8,
+                Image = "ticket-x",
+            })
+            return
+        end
+
+        local TeleportService = game:GetService("TeleportService")
+        TeleportService:TeleportToPlaceInstance(game.PlaceId, tostring(InstanceID), game.Players.LocalPlayer)
+    end,
+})
+
+-- Copy Instance ID button
+local ButtonCopyInstanceID = TabPlayer:CreateButton({
+    Name = "Copy Instance ID",
+    Callback = function()
+        local instanceID = game.JobId
+        if instanceID then
+            setclipboard(instanceID)
+            Rayfield:Notify({
+                Title = "Copied!",
+                Content = "Instance ID copied to clipboard: " .. instanceID,
+                Duration = 3,
+                Image = "check",
+            })
+        else
+            Rayfield:Notify({
+                Title = "Error",
+                Content = "Failed to get Instance ID.",
+                Duration = 3,
+                Image = "ban",
+            })
+        end
+    end,
+})
+
+-- Rejoin Instance button
+local ButtonRejoinInstance = TabPlayer:CreateButton({
+    Name = "Rejoin Instance",
+    Callback = function()
+        local instanceID = game.JobId
+        if instanceID then
+            pcall(function()
+                game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, instanceID, game.Players.LocalPlayer)
+            end)
+        else
+            Rayfield:Notify({
+                Title = "Error",
+                Content = "Failed to get Instance ID.",
+                Duration = 5,
+                Image = "ban"
+            })
+        end
+    end,
+})
+
+local Tab = Window:CreateTab("Toggles", "toggle-right")
+
+local Toggle = Tab:CreateToggle({
+    Name = "Infinite Jump",
+    CurrentValue = false,
+    Flag = "InfiniteJump",
+    Callback = (function()
+        local connection
+        local charConnection
+        return function(Value)
+            local Player = game:GetService("Players").LocalPlayer
+            local UIS = game:GetService("UserInputService")
+            local function setupCharacter(Character)
+                if connection then connection:Disconnect() end
+                connection = UIS.InputBegan:Connect(function(input, gameProcessed)
+                    if input.KeyCode == Enum.KeyCode.Space then
+                        local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+                        if Humanoid then
+                            Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                        end
+                    end
+                end)
+            end
+            if Value then
+                if Player.Character then
+                    setupCharacter(Player.Character)
+                end
+                if not charConnection then
+                    charConnection = Player.CharacterAdded:Connect(setupCharacter)
+                end
+            else
+                if connection then
+                    connection:Disconnect()
+                    connection = nil
+                end
+                if charConnection then
+                    charConnection:Disconnect()
+                    charConnection = nil
+                end
+            end
+        end
+    end)(),
+})
+
+local autoPadConnection
+local hasSeenCyan = false
+
+local ToggleAutoPad = Tab:CreateToggle({
+    Name = "Auto Pad Pickup",
+    CurrentValue = false,
+    Flag = "AutoPadToggle",
+    Callback = function(Value)
+        local player = game.Players.LocalPlayer
+
+        if Value then
+            autoPadConnection = game:GetService("RunService").Heartbeat:Connect(function()
+                local char = player.Character
+                if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+                local hrp = char.HumanoidRootPart
+                local center = workspace.CenterBlocks.Givers.VoidGiver.ColoredParts.Center
+                local touchme = workspace.CenterBlocks.Givers.VoidGiver.ColoredParts.TouchMe
+                if not center or not touchme then return end
+
+                local c = center.Color
+
+                -- Detect cyan-ish color (ready)
+                if math.abs(c.R*255 - 4) < 5 and math.abs(c.G*255 - 175) < 5 and math.abs(c.B*255 - 236) < 5 then
+                    hasSeenCyan = true
+
+                    -- Juggle loop while still cyan
+                    while hasSeenCyan do
+                        local currentColor = center.Color
+                        if not (math.abs(currentColor.R*255 - 4) < 5 and math.abs(currentColor.G*255 - 175) < 5 and math.abs(currentColor.B*255 - 236) < 5) then
+                            break
+                        end
+                        hrp.CFrame = touchme.CFrame + Vector3.new(0,3,0)
+                        task.wait(0.1)
+                        hrp.CFrame = hrp.CFrame -- stay in original position
+                        task.wait(0.1)
+                    end
+                end
+
+                -- Detect change from cyan → red-ish (not ready)
+                if hasSeenCyan and math.abs(c.R*255 - 196) < 5 and math.abs(c.G*255 - 40) < 5 and math.abs(c.B*255 - 28) < 5 then
+                    hasSeenCyan = false -- reset flag
+
+                    -- Teleport continuously to -435,286,96 for 5 seconds
+                    task.spawn(function()
+                        local startTime = tick()
+                        while tick() - startTime < 2.7 do
+                            if hrp then
+                                hrp.CFrame = CFrame.new(-435, 286, 96)
+                            end
+                            task.wait(0.1)
+                        end
+                    end)
+                end
+            end)
+        else
+            if autoPadConnection then
+                autoPadConnection:Disconnect()
+                autoPadConnection = nil
+            end
+            hasSeenCyan = false
+        end
+    end
+})
+
+
+
+local ButtonAutoTool = Tab:CreateButton({
+    Name = "Auto Get Tool Slot 1",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local backpack = player:WaitForChild("Backpack")
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+        local ToolName = "GalaxyBlock" -- <<--- REPLACE THIS WITH EXACT TOOL NAME
+        local SlotIndex = 1 -- desired slot number
+
+        spawn(function()
+            while true do
+                -- stop if player leaves or backpack missing
+                if not player or not backpack then break end
+
+                -- check if tool exists in backpack
+                local tool = backpack:FindFirstChild(ToolName)
+                if not tool then
+                    -- fire server to get tool
+                    ReplicatedStorage:WaitForChild("SpawnGalaxyBlock"):FireServer()
+                else
+                    -- place tool in the desired slot
+                    local tools = backpack:GetChildren()
+                    -- temporarily remove tool
+                    tool.Parent = nil
+                    -- re-add tool
+                    tool.Parent = backpack
+
+                    -- move tool to front of backpack array (slot 1)
+                    if SlotIndex > 1 then
+                        for i = 1, SlotIndex-1 do
+                            local t = tools[i]
+                            if t then t.Parent = nil; t.Parent = backpack end
+                        end
+                    end
+                    break -- stop loop once tool is in backpack
+                end
+                task.wait(0.1)
+            end
+        end)
+    end
+})
