@@ -1,3 +1,4 @@
+-- dont compare this to my other scripts its a skidded script yes i know but i made it long ago kruel isnt skidded ez
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
@@ -938,4 +939,5 @@ local ButtonAutoTool = Tab:CreateButton({
             end
         end)
     end
+
 })
